@@ -19,12 +19,16 @@ class StickyBottomSheetViewController: UIViewController {
     @IBOutlet weak var bottomSheetView: UIView!
     @IBOutlet weak var sheetTopConstraint: NSLayoutConstraint!
     @IBOutlet weak var grabber: UIView!
+    @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var commentView: CommentView!
     
     var currentState: SheetState = .folded
     var preConstant: CGFloat = 0
     var expandedConstant: CGFloat = 59
     var partialConstant: CGFloat { view.frame.height * 0.35 }
     var foldedConstant: CGFloat { view.frame.height }
+    
+    var commentData: [String] = []
     
     
     override func viewDidLoad() {
@@ -46,6 +50,12 @@ class StickyBottomSheetViewController: UIViewController {
         
         grabber.clipsToBounds = true
         grabber.layer.cornerRadius = 1
+        
+        tableView.dataSource = self
+        tableView.rowHeight = UITableView.automaticDimension
+        
+        commentView.delegate = self
+        commentView.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor).isActive = true
     }
 
     @IBAction func commentButtonTapped(_ sender: UIButton) {
@@ -153,7 +163,7 @@ class StickyBottomSheetViewController: UIViewController {
     
     private func animateSheet(to constant: CGFloat) {
         sheetTopConstraint.constant = constant
-        UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: .allowUserInteraction, animations: {
+        UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: .allowUserInteraction, animations: {
             self.view.layoutIfNeeded()
             
             let progress = min((self.foldedConstant - constant) / (self.foldedConstant - self.partialConstant), 1)
@@ -162,3 +172,24 @@ class StickyBottomSheetViewController: UIViewController {
     }
 }
 
+extension StickyBottomSheetViewController: UITableViewDataSource, CommentViewDelegate {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return commentData.count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "CommentCell", for: indexPath) as! CommentTableViewCell
+        cell.comment = commentData[indexPath.row]
+        return cell
+    }
+    
+    func uploadButtonTapped(_ comment: String) {
+        commentData.append(comment)
+        tableView.reloadData()
+    }
+    
+    func commentViewDidBeginEditing(_ view: CommentView) {
+        currentState = .expanded
+        animateSheet(to: targetStateValue(state: currentState))
+    }
+}
