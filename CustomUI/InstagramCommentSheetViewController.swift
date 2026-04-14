@@ -28,7 +28,7 @@ class InstagramCommentSheetViewController: UIViewController {
     var partialConstant: CGFloat { view.frame.height * 0.35 }
     var foldedConstant: CGFloat { view.frame.height }
     
-    var commentData: [String] = []
+    var commentData: [CommentData] = []
     
     
     override func viewDidLoad() {
@@ -179,12 +179,16 @@ extension InstagramCommentSheetViewController: UITableViewDataSource, CommentVie
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CommentCell", for: indexPath) as! CommentTableViewCell
-        cell.comment = commentData[indexPath.row]
+        cell.data = commentData[indexPath.row]
+        cell.isLikedChanged = { [weak self] in
+            self?.commentData[indexPath.row].isLiked.toggle()
+            self?.tableView.reloadRows(at: [indexPath], with: .none)
+        }
         return cell
     }
     
     func uploadButtonTapped(_ comment: String) {
-        commentData.append(comment)
+        commentData.append(CommentData(comment: comment))
         tableView.reloadData()
     }
     

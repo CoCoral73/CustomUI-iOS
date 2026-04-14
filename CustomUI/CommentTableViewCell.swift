@@ -7,6 +7,11 @@
 
 import UIKit
 
+struct CommentData {
+    let comment: String
+    var isLiked: Bool = false
+}
+
 class CommentTableViewCell: UITableViewCell {
 
     @IBOutlet weak var profileImageView: UIImageView!
@@ -15,45 +20,37 @@ class CommentTableViewCell: UITableViewCell {
     @IBOutlet weak var likeButton: UIButton!
     @IBOutlet weak var likeCountLabel: UILabel!
     
-    var isLiked: Bool = false
-    var likeCount: Int = 0
-    
-    var comment: String! {
+    var data: CommentData! {
         didSet {
-            commentLabel.text = comment
+            setupUI()
         }
     }
+    
+    var isLikedChanged: (() -> Void)?
     
     override func awakeFromNib() {
         super.awakeFromNib()
         
-        setupUI()
+        profileImageView.layer.cornerRadius = 17
     }
     
     func setupUI() {
-        profileImageView.layer.cornerRadius = 17
-        likeCountLabel.isHidden = true
-    }
-
-    @IBAction func likeButtonTapped(_ sender: UIButton) {
-        isLiked.toggle()
+        commentLabel.text = data.comment
         
-        if isLiked {
+        if data.isLiked {
             likeButton.tintColor = .red
             likeButton.setImage(UIImage(systemName: "heart.fill"), for: .normal)
-            likeCount += 1
+            likeCountLabel.text = "1"
+            likeCountLabel.isHidden = false
         } else {
             likeButton.tintColor = .systemGray
             likeButton.setImage(UIImage(systemName: "heart"), for: .normal)
-            likeCount -= 1
-        }
-        
-        if likeCount > 0 {
-            likeCountLabel.text = String(likeCount)
-            likeCountLabel.isHidden = false
-        } else {
             likeCountLabel.isHidden = true
         }
+    }
+
+    @IBAction func likeButtonTapped(_ sender: UIButton) {
+        isLikedChanged?()
     }
     
     override func setSelected(_ selected: Bool, animated: Bool) {
